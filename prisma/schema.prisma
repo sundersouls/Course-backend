@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(dbgenerated()) @db.VarChar(21)
+  provider   String
+  providerId String
+  name       String
+  email      String   @unique
+  avatar     String?
+  isAdmin    Boolean  @default(false)
+  isBlocked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  inventories Inventory[]   @relation("InventoryCreator")
+  writeAccess WriteAccess[]
+  comments    Comment[]
+  likes       Like[]
+
+  @@unique([provider, providerId])
+}
+
+model Inventory {
+  id          String   @id @default(dbgenerated()) @db.VarChar(21)
+  customId    String   @unique
+  title       String
+  description String?
+  image       String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  creatorId   String
+  categoryId  String?
+  version     Int      @default(1)
+
+  creator     User           @relation("InventoryCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  writeAccess WriteAccess[]
+  items       Item[]
+  comments    Comment[]
+  tags        InventoryTag[]
+  category    Category?      @relation(fields: [categoryId], references: [id])
+  // category    Category @relation(fields: [categoryId], references: [id])
+
+  customString1State Boolean @default(false)
+  customString1Name  String?
+  customString2State Boolean @default(false)
+  customString2Name  String?
+  customString3State Boolean @default(false)
+  customString3Name  String?
+
+  customInt1State Boolean @default(false)
+  customInt1Name  String?
+  customInt2State Boolean @default(false)
+  customInt2Name  String?
+  customInt3State Boolean @default(false)
+  customInt3Name  String?
+
+  customBool1State Boolean @default(false)
+  customBool1Name  String?
+  customBool2State Boolean @default(false)
+  customBool2Name  String?
+  customBool3State Boolean @default(false)
+  customBool3Name  String?
+
+  customIdFormat Json?
+  nextSequence   Int   @default(1)
+}
+
+model WriteAccess {
+  id          String   @id @default(dbgenerated()) @db.VarChar(21)
+  userId      String
+  inventoryId String
+  grantedAt   DateTime @default(now())
+  grantedBy   String
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, inventoryId])
+}
+
+model Item {
+  id          String   @id @default(dbgenerated()) @db.VarChar(21)
+  inventoryId String
+  name        String
+  values      Json?
+  customId    String?
+  sequence    Int?
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  likes     Like[]
+
+  @@unique([inventoryId, customId])
+}
+
+model Comment {
+  id          String   @id @default(dbgenerated()) @db.VarChar(21)
+  inventoryId String
+  userId      String
+  content     String
+  createdAt   DateTime @default(now())
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          String   @id @default(dbgenerated()) @db.VarChar(21)
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  inventories Inventory[]
+}
+
+model Tag {
+  id        String   @id @default(dbgenerated()) @db.VarChar(21)
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  inventories InventoryTag[]
+}
+
+model InventoryTag {
+  id          String   @id @default(dbgenerated()) @db.VarChar(21)
+  inventoryId String
+  tagId       String
+  createdAt   DateTime @default(now())
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryId, tagId])
+}
+
+model Like {
+  id        String   @id @default(dbgenerated()) @db.VarChar(21)
+  itemId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId])
+}
