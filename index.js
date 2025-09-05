@@ -8,6 +8,8 @@ import authRoutes from "./routes/auth.js";
 import inventoryRoutes from "./routes/inventory.js";
 import userRoutes from "./routes/user.js";
 import "./controller/passport.js";
+import categoriesRouter from './routes/categories.js';
+import usersRouter from './routes/users.js';
 
 const app = express();
 
@@ -18,6 +20,8 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/users", userRoutes);
+app.use('/api/categories', categoriesRouter);
+app.use('/api/userss', usersRouter);
 
 app.listen(process.env.PORT, () =>
   console.log(`Server running ${process.env.PORT}`),

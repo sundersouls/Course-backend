@@ -147,7 +147,7 @@ router.get("/latest", async (req, res) => {
       where: { isPublic: true },
       include: {
         creator: { select: { id: true, name: true, avatar: true } },
-        category: true,
+        // category: true,
         tags: { include: { tag: true } },
         _count: { select: { items: true } },
       },
@@ -167,7 +167,7 @@ router.get("/popular", async (req, res) => {
       where: { isPublic: true },
       include: {
         creator: { select: { id: true, name: true, avatar: true } },
-        category: true,
+        // category: true,
         tags: { include: { tag: true } },
         _count: { select: { items: true } },
       },
@@ -193,6 +193,34 @@ router.get("/tags", async (req, res) => {
   } catch (error) {
     console.error("Tags error:", error);
     res.status(500).json({ error: "Failed to fetch tags" });
+  }
+});
+
+router.get("/tags/search", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 1) {
+      return res.json({ tags: [] });
+    }
+
+    const tags = await prisma.tag.findMany({
+      where: {
+        name: {
+          contains: q.trim(),
+          mode: "insensitive",
+        },
+      },
+      include: {
+        _count: { select: { inventories: true } },
+      },
+      orderBy: { inventories: { _count: "desc" } },
+      take: 10,
+    });
+
+    res.json({ tags });
+  } catch (error) {
+    console.error("Tag search error:", error);
+    res.status(500).json({ error: "Failed to search tags" });
   }
 });
 
